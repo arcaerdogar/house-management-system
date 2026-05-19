@@ -8,6 +8,9 @@ import {
 import authRouter from "./modules/auth/auth.routes.js";
 import meRouter from "./modules/auth/meRoutes/me.routes.js";
 import fileRouter from "./modules/files/file.routes.js";
+import housesRouter from "./modules/houses/houses.routes.js";
+import absencesRouter from "./modules/absences/absences.routes.js";
+import snapshotsRouter from "./modules/snapshots/snapshots.routes.js";
 
 const server = express();
 
@@ -22,6 +25,9 @@ server.get("/", (req: Request, res: Response) => {
 server.use("/auth", authRouter);
 server.use("/me", meRouter);
 server.use("/files", fileRouter);
+server.use("/houses", housesRouter);
+server.use(absencesRouter);
+server.use(snapshotsRouter);
 
 server.use(notFoundHandler);
 server.use(globalErrorHandler);
