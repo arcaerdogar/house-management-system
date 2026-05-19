@@ -22,3 +22,4 @@ export {
   isRotationalQueueMismatchError,
 } from "./rotational.errors.js";
 export { createRotationalExpenseSchema } from "./rotational.validators.js";
+export { enqueueRotationalTurnNotify } from "./rotational-turn-notify.jobs.js";

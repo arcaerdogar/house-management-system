@@ -1,12 +1,16 @@
 import { ExpenseType, Prisma } from "@prisma/client";
 import { prisma } from "../../config/db.js";
-import { parseDateOnly } from "../../domain/snapshot/date-utils.js";
+import {
+  parseDateOnly,
+  todayUtcDateOnly,
+} from "../../domain/snapshot/date-utils.js";
 import { HttpError } from "../common/errors.js";
 import { houseMembershipService } from "./membership.js";
 import { computeRotationalQueue } from "./queue.service.js";
 import { RotationalQueueMismatchError } from "./rotational.errors.js";
 import { toRotationalExpenseDto } from "./rotational.dto.js";
 import { getRotationalTypeForHouse } from "./rotational.service.js";
+import { enqueueRotationalTurnNotify } from "./rotational-turn-notify.jobs.js";
 
 export interface CreateRotationalExpenseInput {
   rotationalTypeId: string;
@@ -66,6 +70,19 @@ export async function createRotationalExpense(
         include: { user: true },
       },
     },
+  });
+
+  const nextQueue = await computeRotationalQueue(
+    houseId,
+    type.id,
+    type.respectsAbsence,
+    todayUtcDateOnly()
+  );
+
+  await enqueueRotationalTurnNotify({
+    houseId,
+    rotationalTypeId: type.id,
+    nextMemberId: nextQueue.nextMemberId,
   });
 
   return toRotationalExpenseDto(expense);
