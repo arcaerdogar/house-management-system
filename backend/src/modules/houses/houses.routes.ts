@@ -15,6 +15,7 @@ import {
   joinHouseSchema,
   removeMemberParamSchema,
 } from "./houses.validators.js";
+import rotationalRouter from "../rotational/rotational.routes.js";
 
 const router = Router();
 
@@ -52,5 +53,7 @@ router.delete(
   validateParams(removeMemberParamSchema),
   asyncHandler(removeHouseMemberHandler)
 );
+
+router.use("/:houseId/rotational-types", rotationalRouter);
 
 export default router;
