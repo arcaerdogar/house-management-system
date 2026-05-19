@@ -138,6 +138,22 @@ export function HouseLayout() {
         >
           Yokluk
         </NavLink>
+        <NavLink
+          to={`/houses/${houseId}/expenses`}
+          className={({ isActive }) =>
+            isActive ? "houses-tab active" : "houses-tab"
+          }
+        >
+          Harcamalar
+        </NavLink>
+        <NavLink
+          to={`/houses/${houseId}/dashboard`}
+          className={({ isActive }) =>
+            isActive ? "houses-tab active" : "houses-tab"
+          }
+        >
+          Bakiye
+        </NavLink>
       </nav>
 
       <Outlet context={{ house }} />

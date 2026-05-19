@@ -3,6 +3,8 @@ import { AbsenceCalendarPage } from "./AbsenceCalendarPage";
 import { HouseLayout, HouseOverviewPage } from "./HouseLayout";
 import { HouseListPage } from "./HouseListPage";
 import { HouseMembersPage } from "./HouseMembersPage";
+import { ExpensesRoutes } from "@/features/expenses";
+import { DashboardRoutes } from "@/features/dashboard";
 import "./houses.css";
 
 /**
@@ -17,6 +19,8 @@ export function HousesRoutes() {
         <Route index element={<HouseOverviewPage />} />
         <Route path="members" element={<HouseMembersPage />} />
         <Route path="absences" element={<AbsenceCalendarPage />} />
+        <Route path="expenses/*" element={<ExpensesRoutes />} />
+        <Route path="dashboard/*" element={<DashboardRoutes />} />
       </Route>
       <Route path="*" element={<Navigate to="/houses" replace />} />
     </Routes>

@@ -13,6 +13,7 @@ import absencesRouter from "./modules/absences/absences.routes.js";
 import snapshotsRouter from "./modules/snapshots/snapshots.routes.js";
 import expensesRouter from "./modules/expenses/expenses.routes.js";
 import templatesRouter from "./modules/templates/templates.routes.js";
+import { dashboardRouter } from "./modules/dashboard/index.js";
 
 const server = express();
 
@@ -32,6 +33,7 @@ server.use(absencesRouter);
 server.use(snapshotsRouter);
 server.use(expensesRouter);
 server.use(templatesRouter);
+server.use(dashboardRouter);
 
 server.use(notFoundHandler);
 server.use(globalErrorHandler);
