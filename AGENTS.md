@@ -19,6 +19,7 @@ The **orchestrator** (main Cursor agent) owns phase gates, subagent dispatch, an
 | `housemate-jobs-mail` | 3 | BullMQ & SES |
 | `housemate-frontend-expenses` | 3 | Expense UI |
 | `housemate-frontend-dashboard` | 4 | Dashboard UI |
+| `housemate-qa` | QA | Unit/API tests, manual test script |
 
 ## Before coding
 
