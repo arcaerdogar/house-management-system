@@ -7,8 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- Auth (existing template) ---
+
 model User {
   id                String    @id @default(uuid())
+  name              String?
   email             String    @unique
   passwordHash      String
   emailVerified     Boolean   @default(false)
@@ -20,9 +23,10 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  refreshTokens         RefreshToken[]
+  refreshTokens          RefreshToken[]
   expiredTwoFactorTokens ExpiredTwoFactorToken[]
-  files                 File[]
+  files                  File[]
+  houseMembers           HouseMember[]
 }
 
 model RefreshToken {
@@ -77,6 +81,208 @@ model File {
   isActive  Boolean     @default(true)
   createdAt DateTime    @default(now())
 
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+}
+
+// --- HouseMate domain (PRD v3 section 4) ---
+
+enum HouseMemberRole {
+  ADMIN
+  MEMBER
+}
+
+enum ExpenseType {
+  REGULAR
+  INSTANT
+  ROTATIONAL
+}
+
+enum RegularExpensePeriod {
+  WEEKLY
+  MONTHLY
+}
+
+enum SnapshotTriggerType {
+  ABSENCE_START
+  ABSENCE_END
+  MEMBER_JOIN
+}
+
+model House {
+  id                String   @id @default(uuid())
+  name              String
+  inviteCode        String   @unique @map("invite_code")
+  monthlySummaryDay Int      @default(1) @map("monthly_summary_day")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  members                 HouseMember[]
+  absences                Absence[]
+  regularExpenseTemplates RegularExpenseTemplate[]
+  rotationalExpenseTypes  RotationalExpenseType[]
+  expenses                Expense[]
+  balanceSnapshots        BalanceSnapshot[]
+
+  @@map("houses")
+}
+
+model HouseMember {
+  id       String          @id @default(uuid())
+  userId   String          @map("user_id")
+  houseId  String          @map("house_id")
+  role     HouseMemberRole @default(MEMBER)
+  isActive Boolean         @default(true) @map("is_active")
+  joinedAt DateTime        @default(now()) @map("joined_at")
+
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  house  House @relation(fields: [houseId], references: [id], onDelete: Cascade)
+
+  absences                         Absence[]
+  responsibleForTemplates          RegularExpenseTemplate[] @relation("TemplateResponsibleMember")
+  paidExpenses                     Expense[]                @relation("ExpensePayer")
+  excludedFromExpenses             ExpenseExclusion[]
+  expenseSplits                    ExpenseSplit[]
+  triggeredSnapshots               BalanceSnapshot[]        @relation("SnapshotTriggerMember")
+  creditorSnapshotEntries          BalanceSnapshotEntry[]   @relation("SnapshotCreditor")
+  debtorSnapshotEntries            BalanceSnapshotEntry[]   @relation("SnapshotDebtor")
+
+  @@unique([userId, houseId])
+  @@index([houseId, isActive])
+  @@map("house_members")
+}
+
+model Absence {
+  id        String   @id @default(uuid())
+  memberId  String   @map("member_id")
+  houseId   String   @map("house_id")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+
+  member           HouseMember       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  house            House             @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  balanceSnapshots BalanceSnapshot[]
+
+  @@index([memberId, startDate, endDate])
+  @@index([houseId])
+  @@map("absences")
+}
+
+model RegularExpenseTemplate {
+  id                    String               @id @default(uuid())
+  houseId               String               @map("house_id")
+  title                 String
+  responsibleMemberId   String               @map("responsible_member_id")
+  period                RegularExpensePeriod
+  respectsAbsence       Boolean              @default(false) @map("respects_absence")
+  isActive              Boolean              @default(true) @map("is_active")
+  createdAt             DateTime             @default(now()) @map("created_at")
+
+  house               House       @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  responsibleMember   HouseMember @relation("TemplateResponsibleMember", fields: [responsibleMemberId], references: [id], onDelete: Restrict)
+  expenses            Expense[]
+
+  @@index([houseId, isActive])
+  @@map("regular_expense_templates")
+}
+
+model RotationalExpenseType {
+  id              String   @id @default(uuid())
+  houseId         String   @map("house_id")
+  title           String
+  respectsAbsence Boolean  @default(true) @map("respects_absence")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  house    House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@index([houseId, isActive])
+  @@map("rotational_expense_types")
+}
+
+model Expense {
+  id               String      @id @default(uuid())
+  houseId          String      @map("house_id")
+  payerMemberId    String      @map("payer_member_id")
+  templateId       String?     @map("template_id")
+  rotationalTypeId String?     @map("rotational_type_id")
+  expenseType      ExpenseType @map("expense_type")
+  amount           Decimal     @db.Decimal(12, 2)
+  description      String
+  respectsAbsence  Boolean     @map("respects_absence")
+  expenseDate      DateTime    @map("expense_date") @db.Date
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  house          House                  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  payerMember    HouseMember            @relation("ExpensePayer", fields: [payerMemberId], references: [id], onDelete: Restrict)
+  template       RegularExpenseTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  rotationalType RotationalExpenseType?  @relation(fields: [rotationalTypeId], references: [id], onDelete: SetNull)
+  exclusions     ExpenseExclusion[]
+  splits         ExpenseSplit[]
+
+  @@index([houseId, expenseDate])
+  @@index([houseId, expenseType])
+  @@index([rotationalTypeId, createdAt])
+  @@map("expenses")
+}
+
+model ExpenseExclusion {
+  id               String @id @default(uuid())
+  expenseId        String @map("expense_id")
+  excludedMemberId String @map("excluded_member_id")
+
+  expense        Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  excludedMember HouseMember @relation(fields: [excludedMemberId], references: [id], onDelete: Restrict)
+
+  @@unique([expenseId, excludedMemberId])
+  @@map("expense_exclusions")
+}
+
+model ExpenseSplit {
+  id             String  @id @default(uuid())
+  expenseId      String  @map("expense_id")
+  debtorMemberId String  @map("debtor_member_id")
+  amountOwed     Decimal @map("amount_owed") @db.Decimal(12, 2)
+  isSettled      Boolean @default(false) @map("is_settled")
+
+  expense      Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  debtorMember HouseMember @relation(fields: [debtorMemberId], references: [id], onDelete: Restrict)
+
+  @@index([expenseId])
+  @@index([debtorMemberId, isSettled])
+  @@map("expense_splits")
+}
+
+model BalanceSnapshot {
+  id               String              @id @default(uuid())
+  houseId          String              @map("house_id")
+  triggerType      SnapshotTriggerType @map("trigger_type")
+  triggerMemberId  String              @map("trigger_member_id")
+  absenceId        String?             @map("absence_id")
+  rotationalCounts Json                @map("rotational_counts")
+  createdAt        DateTime            @default(now()) @map("created_at")
+
+  house         House                  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  triggerMember HouseMember            @relation("SnapshotTriggerMember", fields: [triggerMemberId], references: [id], onDelete: Restrict)
+  absence       Absence?               @relation(fields: [absenceId], references: [id], onDelete: SetNull)
+  entries       BalanceSnapshotEntry[]
+
+  @@index([houseId, createdAt])
+  @@map("balance_snapshots")
+}
+
+model BalanceSnapshotEntry {
+  id               String  @id @default(uuid())
+  snapshotId       String  @map("snapshot_id")
+  creditorMemberId String  @map("creditor_member_id")
+  debtorMemberId   String  @map("debtor_member_id")
+  netAmount        Decimal @map("net_amount") @db.Decimal(12, 2)
+
+  snapshot       BalanceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  creditorMember HouseMember     @relation("SnapshotCreditor", fields: [creditorMemberId], references: [id], onDelete: Restrict)
+  debtorMember   HouseMember     @relation("SnapshotDebtor", fields: [debtorMemberId], references: [id], onDelete: Restrict)
+
+  @@index([snapshotId])
+  @@map("balance_snapshot_entries")
 }
