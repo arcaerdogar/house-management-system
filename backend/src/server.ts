@@ -11,6 +11,8 @@ import fileRouter from "./modules/files/file.routes.js";
 import housesRouter from "./modules/houses/houses.routes.js";
 import absencesRouter from "./modules/absences/absences.routes.js";
 import snapshotsRouter from "./modules/snapshots/snapshots.routes.js";
+import expensesRouter from "./modules/expenses/expenses.routes.js";
+import templatesRouter from "./modules/templates/templates.routes.js";
 
 const server = express();
 
@@ -28,6 +30,8 @@ server.use("/files", fileRouter);
 server.use("/houses", housesRouter);
 server.use(absencesRouter);
 server.use(snapshotsRouter);
+server.use(expensesRouter);
+server.use(templatesRouter);
 
 server.use(notFoundHandler);
 server.use(globalErrorHandler);
