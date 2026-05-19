@@ -1,0 +1,39 @@
+---
+description: Multi-agent geliştirme stratejisi ve orchestrator kuralları
+alwaysApply: true
+---
+
+# Geliştirme Stratejisi
+
+## Orchestrator (ana agent)
+
+- Faz planını `docs/DEVELOPMENT_PLAN.md` üzerinden yürütür
+- Subagent'ları skill + `docs/agents/PROMPTS.md` ile dispatch eder
+- `backend/src/server.ts` route birleştirmesini **yalnızca orchestrator** yapar
+- OWNERSHIP ihlali yapan değişiklikleri reddeder / geri aldırır
+
+## Subagent kuralları
+
+1. Yalnızca `docs/OWNERSHIP.md` içindeki dizinleri düzenle
+2. Modüller arası: `backend/src/domain/contracts/` interface'leri kullan; concrete import yasak (kendi modülü hariç)
+3. Enum'lar: `@housemate/shared` — tekrar tanımlama
+4. Snapshot: yalnızca ABSENCE_START | ABSENCE_END | MEMBER_JOIN
+5. ROTATIONAL: `ExpenseSplits` oluşturma
+
+## Paralellik
+
+- Aynı fazdaki bağımsız agent'lar paralel çalışabilir
+- Faz gate tamamlanmadan sonraki faza geçme
+
+## Kod kalitesi
+
+- Backend: `asyncHandler`, Zod `validate`, `HttpError`
+- Mevcut auth/mail/S3 template pattern'lerini kopyala
+- Gereksiz abstraction ekleme; PRD algoritmalarını doğrudan uygula
+
+## Git (zorunlu)
+
+Detay: `housemate-git-workflow.mdc`
+
+- Her tamamlanan adım → orchestrator **commit + push**
+- Subagent commit/push yapmaz

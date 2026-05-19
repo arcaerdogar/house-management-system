@@ -1,0 +1,38 @@
+---
+description: HouseMate backend modül konvansiyonları
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend Konvansiyonları
+
+## Modül yapısı
+
+```
+backend/src/modules/<name>/
+  <name>.routes.ts
+  <name>.controller.ts
+  <name>.service.ts
+  <name>.validators.ts   # Zod schemas
+  <name>.dto.ts          # optional response types
+```
+
+## Route kaydı
+
+Modül kendi `*.routes.ts` export eder. `server.ts` güncellemesi orchestrator'a bırakılır.
+
+## Prisma
+
+- Schema değişikliği yalnızca **schema agent**
+- Decimal alanlar: `Prisma.Decimal` / `number` dönüşümü tutarlı olsun
+- Tarih karşılaştırmaları: `expense_date`, absence aralıkları date-only (UTC gün)
+
+## Hata kodları
+
+- 401 yetkisiz, 403 ev üyesi değil / admin değil
+- 409 absence overlap, sıra uyumsuzluğu (override ile devam edilebilir)
+
+## BullMQ
+
+- Job tanımları `backend/src/services/jobs/`
+- Domain event'ler service katmanından `queue.add` ile tetiklenir

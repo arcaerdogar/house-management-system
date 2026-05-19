@@ -1,0 +1,31 @@
+---
+description: HouseMate Finance proje kapsamı ve v1 sınırları
+alwaysApply: true
+---
+
+# Proje Kapsamı
+
+**Ürün:** HouseMate Finance — ortak ev harcama yönetimi (PRD v3.0).
+
+**Monorepo:**
+- `backend/` — Express, Prisma, BullMQ, AWS SES
+- `frontend/` — React SPA
+- `packages/shared/` — paylaşılan enum ve contract tipleri
+
+## v1.0 kapsamında (yapılacak)
+
+- Ev/üye yönetimi, yokluk, snapshot tabanlı bakiye
+- REGULAR / INSTANT / ROTATIONAL harcamalar
+- Dashboard, aktivite akışı, e-posta bildirimleri (SES + BullMQ)
+
+## Kapsam dışı (yapma)
+
+- Mobil uygulama, Settle Up akışı, çoklu para birimi
+- WebSocket / push, fiş fotoğrafı, ödeme entegrasyonu
+- `is_settled` manuel kullanım — v1'de otomatik settle yok
+
+## Tek kaynak
+
+- İş kuralları: `HouseMate_Finance_PRD_v3.pdf`
+- API: `docs/api-contract.md`
+- Sahipliük: `docs/OWNERSHIP.md`

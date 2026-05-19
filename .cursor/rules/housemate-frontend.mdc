@@ -1,0 +1,37 @@
+---
+description: HouseMate frontend React konvansiyonları
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend Konvansiyonları
+
+## Yapı
+
+```
+frontend/src/
+  app/           # shell agent — router, layout, providers
+  api/           # shell agent — fetch client, types
+  auth/          # shell agent — login, register
+  features/
+    houses/      # frontend-houses agent
+    expenses/    # frontend-expenses agent
+    dashboard/   # frontend-dashboard agent
+```
+
+## API
+
+- Base URL: `import.meta.env.VITE_API_URL`
+- Access token memory; refresh httpOnly cookie (backend template ile uyumlu)
+- Hata gösterimi: `ApiErrorBody` from `@housemate/shared`
+
+## UI
+
+- Feature agent'lar `features/<name>/` altında sayfa + bileşen
+- Ortak layout: `app/AppLayout.tsx` — feature agent düzenlemez
+- Türkçe UI metinleri (PRD hedef kitle)
+
+## State
+
+- Ev bağlamı: `HouseProvider` (shell) — aktif `houseId`
+- Server state: fetch + basit cache; gereksiz Redux yok

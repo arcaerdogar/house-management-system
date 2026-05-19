@@ -1,0 +1,49 @@
+---
+description: Her tamamlanan geliştirme adımından sonra commit ve push zorunluluğu
+alwaysApply: true
+---
+
+# Git: Commit ve Push
+
+## Kim commit atar?
+
+- **Yalnızca orchestrator** commit ve push yapar.
+- Subagent'lar `git commit` / `git push` çalıştırmaz.
+
+## Ne zaman?
+
+Her **tamamlanan adım** sonrası (sırayla):
+
+1. Subagent görevi bitti → OWNERSHIP + build/smoke OK → **commit + push**
+2. Paralel fazdaki tüm agent'lar bitti → `server.ts` merge + faz smoke → **commit + push**
+3. Faz gate geçildi → checklist güncellendi → **commit + push**
+
+Altyapı / kural / skill değişiklikleri de aynı kurala tabidir (ör. `chore: add multi-agent git workflow`).
+
+## Commit mesajı
+
+Conventional commits, İngilizce veya Türkçe tutarlı olsun:
+
+```
+feat(schema): add Prisma models for HouseMate domain
+feat(house): implement house and member APIs
+chore(phase-1): merge routes and pass phase gate
+```
+
+## Push
+
+- Her commit'ten hemen sonra: `git push` (tracking branch yoksa `git push -u origin HEAD`)
+- **Force push yasak** (`main`/`master` dahil)
+- Hook'ları atla (`--no-verify`) kullanma
+- `.env`, secret dosyaları commit'lenmez
+
+## Orchestrator kontrol listesi
+
+```
+git status
+git diff
+# stage only relevant files
+git commit -m "..."
+git push
+git status  # clean working tree doğrula
+```

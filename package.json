@@ -1,0 +1,20 @@
+{
+  "name": "housemate-finance",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HouseMate Finance — ev harcama yönetim sistemi (monorepo)",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build:shared": "npm run build -w @housemate/shared",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "prisma:gen": "npm run prisma:gen -w backend",
+    "prisma:mig": "npm run prisma:mig -w backend"
+  }
+}
