@@ -3,6 +3,7 @@ import { AuthProvider } from "@/auth/AuthContext";
 import { HouseProvider } from "@/app/HouseContext";
 import { ProtectedRoute } from "@/app/ProtectedRoute";
 import { AppLayout } from "@/app/AppLayout";
+import { HousesPlaceholder } from "@/app/HousesPlaceholder";
 import { LoginPage } from "@/auth/LoginPage";
 import { RegisterPage } from "@/auth/RegisterPage";
 
@@ -23,16 +24,9 @@ export function App() {
               }
             >
               <Route index element={<Navigate to="/houses" replace />} />
-              <Route
-                path="houses/*"
-                element={
-                  <p style={{ padding: "1rem" }}>
-                    Ev yönetimi — frontend-houses agent tarafından doldurulacak.
-                  </p>
-                }
-              />
+              <Route path="houses/*" element={<HousesPlaceholder />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/houses" replace />} />
           </Routes>
         </HouseProvider>
       </AuthProvider>

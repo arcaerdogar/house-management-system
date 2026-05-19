@@ -1,34 +1,39 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-
-const STORAGE_KEY = "housemate_active_house";
+import { ACTIVE_HOUSE_KEY } from "@/api/session";
 
 interface HouseContextValue {
   activeHouseId: string | null;
   setActiveHouseId: (id: string | null) => void;
+  clearActiveHouse: () => void;
 }
 
 const HouseContext = createContext<HouseContextValue | null>(null);
 
 export function HouseProvider({ children }: { children: ReactNode }) {
-  const [activeHouseId, setActiveHouseIdState] = useState<string | null>(
-    () => localStorage.getItem(STORAGE_KEY)
+  const [activeHouseId, setActiveHouseIdState] = useState<string | null>(() =>
+    localStorage.getItem(ACTIVE_HOUSE_KEY)
   );
 
-  const setActiveHouseId = (id: string | null) => {
+  const setActiveHouseId = useCallback((id: string | null) => {
     setActiveHouseIdState(id);
-    if (id) localStorage.setItem(STORAGE_KEY, id);
-    else localStorage.removeItem(STORAGE_KEY);
-  };
+    if (id) localStorage.setItem(ACTIVE_HOUSE_KEY, id);
+    else localStorage.removeItem(ACTIVE_HOUSE_KEY);
+  }, []);
+
+  const clearActiveHouse = useCallback(() => {
+    setActiveHouseId(null);
+  }, [setActiveHouseId]);
 
   const value = useMemo(
-    () => ({ activeHouseId, setActiveHouseId }),
-    [activeHouseId]
+    () => ({ activeHouseId, setActiveHouseId, clearActiveHouse }),
+    [activeHouseId, setActiveHouseId, clearActiveHouse]
   );
 
   return (

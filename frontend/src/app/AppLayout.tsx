@@ -1,28 +1,50 @@
-import { Outlet, Link } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
 import { useHouse } from "@/app/HouseContext";
 
 export function AppLayout() {
   const { logout } = useAuth();
   const { activeHouseId } = useHouse();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <div className="layout">
       <header className="header">
-        <Link to="/" className="brand">
+        <NavLink to="/houses" className="brand" end>
           HouseMate
-        </Link>
-        <nav>
-          <Link to="/houses">Evler</Link>
+        </NavLink>
+        <nav className="nav" aria-label="Ana menü">
+          <NavLink to="/houses" end>
+            Evler
+          </NavLink>
           {activeHouseId && (
             <>
-              <Link to={`/houses/${activeHouseId}/expenses`}>Harcamalar</Link>
-              <Link to={`/houses/${activeHouseId}/dashboard`}>Özet</Link>
+              <NavLink to={`/houses/${activeHouseId}/expenses`}>
+                Harcamalar
+              </NavLink>
+              <NavLink to={`/houses/${activeHouseId}/dashboard`}>
+                Özet
+              </NavLink>
             </>
           )}
         </nav>
-        <button type="button" onClick={() => void logout()}>
-          Çıkış
+        <button
+          type="button"
+          className="btn-logout"
+          onClick={() => void handleLogout()}
+          disabled={loggingOut}
+        >
+          {loggingOut ? "Çıkılıyor…" : "Çıkış"}
         </button>
       </header>
       <main className="main">
@@ -31,4 +53,3 @@ export function AppLayout() {
     </div>
   );
 }
-
