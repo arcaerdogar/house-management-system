@@ -2,6 +2,22 @@
 
 Bu belge, sıfırdan uçtan uca manuel QA için adım adım kontrol listesidir.
 
+## Otomatik API E2E (manuel script)
+
+Manuel adımların API karşılığı tek bir Supertest akışında çalıştırılabilir (tarayıcı/UI yok):
+
+```bash
+cd backend
+# DATABASE_URL gerekir (.env.test veya .env)
+npm run test:manual
+```
+
+Tüm `tests/e2e` klasörü için: `npm run test:e2e`.
+
+Akış: kullanıcı kayıt/giriş, ev/davet, yokluk, şablonlar, INSTANT/REGULAR/ROTATIONAL harcamalar, dashboard/aktivite, snapshot, admin kuralları, mail mock doğrulama, regresyon (401/409, decimal/date). Settle Up endpoint’i yoktur; borçlar dashboard ile doğrulanır.
+
+---
+
 ## Ortam
 
 | Servis | URL (Docker Compose) |
@@ -19,7 +35,7 @@ docker compose up --build
 
 Backend ve frontend ayrı çalıştırılacaksa: `backend/.env` dosyasını doldurun, `npm run dev -w backend` ve `npm run dev -w frontend`.
 
-**Otomatik testler:** `cd backend && npm run test:unit` (DB gerekmez). API testleri için `backend/.env.test` içinde `DATABASE_URL` ve `npm run test:api`.
+**Otomatik testler:** `cd backend && npm run test:unit` (DB gerekmez). API testleri için `backend/.env.test` içinde `DATABASE_URL` ve `npm run test:api`. Bu belgenin tam akışı: `npm run test:manual`.
 
 **E-posta:** Manuel testte gerçek AWS SES isteğe bağlıdır (`MAIL_MODE` veya `.env` anahtarları). CI ve otomatik testlerde mail **mock** kullanılır; gerçek SES çağrılmaz.
 

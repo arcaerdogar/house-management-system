@@ -29,8 +29,14 @@ description: >-
 cd backend
 npm run test:unit
 npm run test:api
+npm run test:e2e          # all tests in tests/e2e/
+npm run test:manual       # single journey: manual-script.flow.test.ts
 npm run test
 ```
+
+`test:manual` mirrors `docs/MANUAL_TEST_SCRIPT.md` sections 1–10 via Supertest (requires `DATABASE_URL`). Mail assertions use `getMailMockState()`; no real SES.
+
+E2E uses `tests/e2e/vitest.config.ts` (separate `include` from root config).
 
 ## Mail verification in tests
 
