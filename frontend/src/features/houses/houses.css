@@ -28,6 +28,11 @@
   box-shadow: var(--shadow);
 }
 
+.houses-card-highlight {
+  border-color: #93c5fd;
+  background: linear-gradient(180deg, #eff6ff 0%, var(--color-surface) 4rem);
+}
+
 .houses-card-grid {
   display: grid;
   gap: 1rem;
@@ -76,6 +81,19 @@
   font: inherit;
   font-weight: 600;
   border: 1px solid transparent;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+a.houses-btn-primary,
+a.houses-btn-primary:visited {
+  color: #fff;
+}
+
+a.houses-btn-secondary,
+a.houses-btn-secondary:visited {
+  color: #334155;
 }
 
 .houses-btn-primary {

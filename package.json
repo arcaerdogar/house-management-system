@@ -15,6 +15,10 @@
     "build:backend": "npm run build -w backend",
     "build:frontend": "npm run build -w frontend",
     "prisma:gen": "npm run prisma:gen -w backend",
-    "prisma:mig": "npm run prisma:mig -w backend"
+    "prisma:mig": "npm run prisma:mig -w backend",
+    "docker:up": "docker compose up --build",
+    "docker:up:detached": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   }
 }

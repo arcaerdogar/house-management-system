@@ -4,6 +4,8 @@ import { ApiError } from "@/api/client";
 import { listExpenses } from "@/api/expenses";
 import { ExpenseType, type Expense } from "@housemate/shared";
 import { formatDisplayDate, todayDateOnly } from "./dateUtils";
+import { ExpenseListFab } from "./ExpenseListFab";
+import { ExpenseQuickLinks } from "./ExpenseQuickLinks";
 import { ExpenseTypeBadge } from "./ExpenseTypeBadge";
 import { useHouseMembers } from "./useHouseMembers";
 import { formatMoney, memberDisplayName } from "./utils";
@@ -55,39 +57,26 @@ export function ExpenseListPage() {
   }
 
   const base = `/houses/${houseId}/expenses`;
+  const hasActiveFilters =
+    typeFilter !== "" || fromDate !== "" || toDate !== "" || memberFilter !== "";
 
   return (
     <div className="expenses-card">
       <h3>Harcamalar</h3>
-      <p className="expenses-muted">
-        Evdeki tüm harcamaları filtreleyebilir veya yeni kayıt ekleyebilirsiniz.
+      <p className="expenses-help-box" role="note">
+        Yeni gider eklemek için aşağıdaki düğmeleri kullanın. Anlık harcamalar
+        eşit bölünür; düzenli ödemeler şablona bağlıdır; sıralı harcamalarda
+        sıradaki kişi otomatik belirlenir.
       </p>
 
-      <div className="expenses-toolbar" style={{ margin: "1rem 0" }}>
-        <Link
-          to={`${base}/instant/new`}
-          className="expenses-btn expenses-btn-primary"
-        >
-          Anlık harcama
-        </Link>
-        <Link
-          to={`${base}/regular/new`}
-          className="expenses-btn expenses-btn-secondary"
-        >
-          Düzenli ödeme
-        </Link>
-        <Link
-          to={`${base}/rotational`}
-          className="expenses-btn expenses-btn-secondary"
-        >
-          Sıralı harcamalar
-        </Link>
-        <span className="expenses-toolbar-spacer" />
+      <ExpenseQuickLinks houseId={houseId} />
+
+      <div className="expenses-toolbar" style={{ marginTop: "0.5rem" }}>
         <Link
           to={`${base}/templates`}
           className="expenses-btn expenses-btn-secondary"
         >
-          Şablonlar
+          Düzenli şablonlar (yönetici)
         </Link>
       </div>
 
@@ -176,9 +165,19 @@ export function ExpenseListPage() {
           Harcamalar yükleniyor…
         </p>
       ) : expenses.length === 0 ? (
-        <p className="expenses-muted" style={{ marginTop: "1rem" }}>
-          Bu filtrelere uygun harcama bulunamadı.
-        </p>
+        <div className="expenses-empty-cta">
+          <h4>
+            {hasActiveFilters
+              ? "Bu filtrelere uygun harcama yok"
+              : "Henüz harcama kaydı yok"}
+          </h4>
+          <p className="expenses-muted">
+            {hasActiveFilters
+              ? "Filtreleri temizleyin veya yeni bir harcama ekleyin."
+              : "İlk harcamanızı eklemek için aşağıdaki seçeneklerden birini seçin."}
+          </p>
+          <ExpenseQuickLinks houseId={houseId} variant="grid" />
+        </div>
       ) : (
         <ul className="expenses-list" style={{ marginTop: "1rem" }}>
           {expenses.map((expense) => {
@@ -208,6 +207,8 @@ export function ExpenseListPage() {
           })}
         </ul>
       )}
+
+      <ExpenseListFab houseId={houseId} />
     </div>
   );
 }

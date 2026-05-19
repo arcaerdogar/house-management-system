@@ -191,10 +191,14 @@ export function TemplateAdminPage() {
               {members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {memberDisplayName(m)}
-                  {m.role === HouseMemberRole.ADMIN ? " (yönetici)" : ""}
+                  {m.role === HouseMemberRole.ADMIN ? " (ev yöneticisi)" : ""}
                 </option>
               ))}
             </select>
+            <span className="expenses-muted">
+              Ödeme kaydını yalnızca burada seçilen üye ekleyebilir; ev
+              yöneticisi farklı bir üye ise onun adına kayıt ekleyemez.
+            </span>
           </label>
           <label>
             Periyot

@@ -6,6 +6,15 @@ type ErrorPayload = ApiErrorBody & {
   message?: string;
 };
 
+const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  "Only the responsible member may submit this regular expense":
+    "Bu düzenli ödemeyi yalnızca şablonda sorumlu atanan üye kaydedebilir. Ev yöneticisi olmak tek başına yetmez.",
+};
+
+function localizeKnownError(message: string): string {
+  return KNOWN_ERROR_MESSAGES[message] ?? message;
+}
+
 export function parseApiErrorMessage(
   body: unknown,
   fallback: string
@@ -13,13 +22,13 @@ export function parseApiErrorMessage(
   if (!body || typeof body !== "object") return fallback;
   const payload = body as ErrorPayload;
   if (typeof payload.message === "string" && payload.message) {
-    return payload.message;
+    return localizeKnownError(payload.message);
   }
   if (typeof payload.error === "string" && payload.error) {
-    return payload.error;
+    return localizeKnownError(payload.error);
   }
   if (typeof payload.Error === "string" && payload.Error) {
-    return payload.Error;
+    return localizeKnownError(payload.Error);
   }
   return fallback;
 }

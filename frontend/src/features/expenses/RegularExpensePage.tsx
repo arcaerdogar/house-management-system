@@ -5,13 +5,19 @@ import { createExpense, listTemplates } from "@/api/expenses";
 import { ExpenseType, type RegularExpenseTemplate } from "@housemate/shared";
 import { todayDateOnly } from "./dateUtils";
 import { useHouseMembers } from "./useHouseMembers";
-import { isValidAmount, normalizeAmountInput, periodLabel } from "./utils";
+import {
+  isValidAmount,
+  memberDisplayName,
+  normalizeAmountInput,
+  periodLabel,
+} from "./utils";
 import "./expenses.css";
 
 export function RegularExpensePage() {
   const { houseId } = useParams<{ houseId: string }>();
   const navigate = useNavigate();
-  const { myMemberId, loading: membersLoading } = useHouseMembers(houseId);
+  const { members, myMemberId, isAdmin, loading: membersLoading } =
+    useHouseMembers(houseId);
 
   const [templates, setTemplates] = useState<RegularExpenseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +29,14 @@ export function RegularExpensePage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!houseId) return;
+    if (!houseId || membersLoading) return;
+    if (!myMemberId) {
+      setTemplates([]);
+      setLoading(false);
+      setError("Bu evin aktif üyesi değilsiniz.");
+      return;
+    }
+
     let cancelled = false;
 
     async function load() {
@@ -31,14 +44,12 @@ export function RegularExpensePage() {
       setError(null);
       try {
         const data = await listTemplates(houseId!);
-        const active = data.filter((t) => t.isActive);
+        const mine = data.filter(
+          (t) => t.isActive && t.responsibleMemberId === myMemberId
+        );
         if (!cancelled) {
-          setTemplates(active);
-          const mine = active.filter(
-            (t) => t.responsibleMemberId === myMemberId
-          );
-          const pick = mine[0] ?? active[0];
-          if (pick) setTemplateId(pick.id);
+          setTemplates(mine);
+          setTemplateId(mine[0]?.id ?? "");
         }
       } catch (err) {
         if (!cancelled) {
@@ -57,16 +68,20 @@ export function RegularExpensePage() {
     return () => {
       cancelled = true;
     };
-  }, [houseId, myMemberId]);
+  }, [houseId, myMemberId, membersLoading]);
 
   const selected = templates.find((t) => t.id === templateId);
-  const myTemplates = templates.filter(
-    (t) => t.responsibleMemberId === myMemberId
-  );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!houseId || !templateId) return;
+    if (!houseId || !templateId || !myMemberId) return;
+
+    if (selected && selected.responsibleMemberId !== myMemberId) {
+      setError(
+        "Seçilen şablonda sorumlu siz değilsiniz. Yalnızca kendi sorumlu olduğunuz şablonlar için kayıt ekleyebilirsiniz."
+      );
+      return;
+    }
 
     const normalized = normalizeAmountInput(amount);
     if (!isValidAmount(normalized)) {
@@ -112,24 +127,34 @@ export function RegularExpensePage() {
 
       <h3>Düzenli harcama kaydet</h3>
       <p className="expenses-muted">
-        Aktif bir şablona bağlı ödemeyi kaydedin. Sorumlu olduğunuz şablonlar
-        öncelikli listelenir.
+        Düzenli ödemeyi yalnızca şablonda <strong>sorumlu üye</strong> olarak
+        atandığınız kalemler için kaydedebilirsiniz. Ev yöneticisi (admin)
+        olmak, başkasının şablonu adına kayıt eklemek için yetmez.
       </p>
 
       {loading || membersLoading ? (
         <p className="expenses-loading">Şablonlar yükleniyor…</p>
       ) : templates.length === 0 ? (
         <>
-          <p className="expenses-muted">
-            Aktif şablon yok. Yönetici şablon oluşturabilir.
+          <p className="expenses-error" role="alert">
+            Sorumlu olduğunuz aktif şablon yok. Şablon oluştururken veya
+            düzenlerken &quot;Sorumlu üye&quot; alanında sizin adınızın
+            seçili olduğundan emin olun.
           </p>
-          <Link
-            to={`${listPath}/templates`}
-            className="expenses-btn expenses-btn-secondary"
-            style={{ marginTop: "0.75rem" }}
-          >
-            Şablonlara git
-          </Link>
+          {isAdmin && (
+            <Link
+              to={`${listPath}/templates`}
+              className="expenses-btn expenses-btn-secondary"
+              style={{ marginTop: "0.75rem" }}
+            >
+              Şablonları yönet
+            </Link>
+          )}
+          {!isAdmin && (
+            <p className="expenses-muted" style={{ marginTop: "0.75rem" }}>
+              Şablon ataması için ev yöneticisine başvurun.
+            </p>
+          )}
         </>
       ) : (
         <form className="expenses-form" onSubmit={handleSubmit}>
@@ -140,41 +165,31 @@ export function RegularExpensePage() {
           )}
 
           <label>
-            Şablon
+            Şablon (sorumlu olduğunuz)
             <select
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
               required
-              disabled={submitting}
+              disabled={submitting || templates.length <= 1}
             >
-              {myTemplates.length > 0 && (
-                <optgroup label="Sorumlu olduğunuz">
-                  {myTemplates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} ({periodLabel(t.period)})
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              <optgroup
-                label={
-                  myTemplates.length > 0 ? "Diğer şablonlar" : "Tüm şablonlar"
-                }
-              >
-                {templates
-                  .filter((t) => !myTemplates.some((m) => m.id === t.id))
-                  .map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} ({periodLabel(t.period)})
-                    </option>
-                  ))}
-              </optgroup>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title} ({periodLabel(t.period)})
+                </option>
+              ))}
             </select>
           </label>
 
           {selected && (
             <p className="expenses-muted">
-              Yokluk: {selected.respectsAbsence ? "dikkate alınır" : "alınmaz"}
+              Sorumlu:{" "}
+              {memberDisplayName(
+                members.find((m) => m.id === selected.responsibleMemberId) ?? {
+                  user: undefined,
+                }
+              )}{" "}
+              · Yokluk:{" "}
+              {selected.respectsAbsence ? "dikkate alınır" : "alınmaz"}
             </p>
           )}
 

@@ -5,6 +5,7 @@ import { ApiError } from "@/api/client";
 import { getHouse } from "@/api/houses";
 import { useHouse } from "@/app/HouseContext";
 import type { House } from "@housemate/shared";
+import { ExpenseQuickLinks } from "@/features/expenses/ExpenseQuickLinks";
 import { addKnownHouseId } from "./houseStorage";
 import "./houses.css";
 
@@ -164,26 +165,53 @@ export function HouseLayout() {
 export function HouseOverviewPage() {
   const { houseId } = useParams<{ houseId: string }>();
 
-  return (
-    <div className="houses-card">
-      <h3>Ev özeti</h3>
-      <p className="houses-muted">
-        Üye listesi ve yokluk takvimine üst menüden ulaşabilirsiniz.
+  if (!houseId) {
+    return (
+      <p className="houses-error" role="alert">
+        Geçersiz ev adresi
       </p>
-      <div className="houses-toolbar">
-        <Link
-          to={`/houses/${houseId}/members`}
-          className="houses-btn houses-btn-secondary"
-        >
-          Üyeleri görüntüle
-        </Link>
-        <Link
-          to={`/houses/${houseId}/absences`}
-          className="houses-btn houses-btn-secondary"
-        >
-          Yokluk takvimi
-        </Link>
+    );
+  }
+
+  return (
+    <>
+      <div className="houses-card houses-card-highlight">
+        <h3>Harcama ekle</h3>
+        <p className="houses-muted">
+          Ortak giderleri kaydetmek için aşağıdan bir tür seçin. Tüm
+          harcamaları görmek için &quot;Harcama listesi&quot;ne gidin veya üst
+          menüden <strong>Harcamalar</strong> sekmesini kullanın.
+        </p>
+        <ExpenseQuickLinks houseId={houseId} variant="grid" />
       </div>
-    </div>
+
+      <div className="houses-card">
+        <h3>Ev özeti</h3>
+        <p className="houses-muted">
+          Üye listesi ve yokluk takvimine aşağıdaki bağlantılardan veya üst
+          menüden ulaşabilirsiniz.
+        </p>
+        <div className="houses-toolbar">
+          <Link
+            to={`/houses/${houseId}/members`}
+            className="houses-btn houses-btn-secondary"
+          >
+            Üyeleri görüntüle
+          </Link>
+          <Link
+            to={`/houses/${houseId}/absences`}
+            className="houses-btn houses-btn-secondary"
+          >
+            Yokluk takvimi
+          </Link>
+          <Link
+            to={`/houses/${houseId}/expenses`}
+            className="houses-btn houses-btn-primary"
+          >
+            Harcama listesi
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }
